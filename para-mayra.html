@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Para Mayra</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;0,700;1,600&family=Great+Vibes&display=swap" rel="stylesheet">
+<style>
+  /* ===== Tokens ===== */
+  :root{
+    --ink:#2D0B12;          /* texto principal (contraste AAA sobre crema) */
+    --wine:#4A0E17;         /* botón / hilos */
+    --wine-hover:#6A1A28;
+    --cream:#FFF5F5;
+    --serif:'Cormorant Garamond',Georgia,serif;
+    --script:'Great Vibes','Brush Script MT',cursive;
+  }
+  *{box-sizing:border-box;margin:0}
+  html,body{height:100%}
+  body{
+    overflow:hidden;color:var(--ink);font-family:var(--serif);
+    /* gradient mesh suave */
+    background:
+      radial-gradient(60% 50% at 12% 18%,#FFE0E8 0%,transparent 70%),
+      radial-gradient(50% 45% at 88% 12%,#EBD5F2 0%,transparent 70%),
+      radial-gradient(60% 55% at 72% 92%,#FFE9D8 0%,transparent 70%),
+      linear-gradient(160deg,#FFF5F5,#F3E5F5);
+  }
+  /* bokeh sutil que deriva lentamente */
+  body::before{
+    content:"";position:fixed;inset:-10%;pointer-events:none;filter:blur(18px);opacity:.55;
+    background:
+      radial-gradient(circle at 20% 70%,rgba(255,255,255,.9) 0 5%,transparent 6%),
+      radial-gradient(circle at 78% 30%,rgba(255,214,225,.9) 0 7%,transparent 8%),
+      radial-gradient(circle at 55% 12%,rgba(255,255,255,.8) 0 4%,transparent 5%),
+      radial-gradient(circle at 90% 75%,rgba(243,215,250,.9) 0 6%,transparent 7%);
+    animation:drift 26s ease-in-out infinite alternate;
+  }
+  @keyframes drift{to{transform:translate3d(3%,-3%,0) scale(1.06)}}
+
+  /* ===== Fase 1: canvas de pétalos ===== */
+  #petals{position:fixed;inset:0;width:100%;height:100%;z-index:3;pointer-events:none}
+
+  /* ===== Fase 2: tulipanes ===== */
+  #tulips{position:fixed;inset:0;z-index:2;pointer-events:none;transition:opacity 1.2s ease,transform 1.4s ease}
+  .tulip{
+    position:absolute;bottom:0;left:var(--x);translate:-50% 0;
+    height:calc(var(--h)*1vh);aspect-ratio:100/260;
+    transform:translateY(105%);
+    transition:transform 2.4s cubic-bezier(.2,.8,.2,1) calc(var(--d)*.3s);
+  }
+  .grow .tulip{transform:none}
+  .tulip svg{width:100%;height:100%;overflow:visible;transform-origin:50% 100%;animation:sway 5s ease-in-out infinite alternate;animation-delay:var(--sd)}
+  @keyframes sway{from{rotate:-1.6deg}to{rotate:1.6deg}}
+  .pl{transform-box:fill-box;transform-origin:50% 100%;stroke:rgba(74,14,23,.2);stroke-width:.8;
+      transition:rotate 1.7s cubic-bezier(.3,1.35,.4,1),scale 1.7s ease}
+  .L{rotate:-4deg}.R{rotate:4deg}.F{scale:1}.B{scale:.96}
+  .open .L{rotate:-32deg}.open .R{rotate:32deg}.open .F{scale:.94}.open .B{scale:1.05}
+
+  /* ===== Mensaje central ===== */
+  #card{
+    position:fixed;z-index:4;left:50%;top:38%;width:min(92vw,580px);translate:-50% -50%;
+    text-align:center;padding:clamp(26px,5vw,46px) clamp(18px,4vw,40px);
+    background:rgba(255,245,245,.84);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+    border:1px solid rgba(74,14,23,.14);border-radius:30px;
+    box-shadow:0 24px 60px -20px rgba(74,14,23,.35),0 2px 6px rgba(74,14,23,.08);
+    opacity:0;scale:.7;visibility:hidden;
+    transition:opacity 1.1s ease,scale 1.3s cubic-bezier(.2,1.2,.3,1);
+  }
+  #card.show{opacity:1;scale:1;visibility:visible}
+  #card h1{
+    font:400 clamp(2.7rem,10vw,5rem)/1.1 var(--script);color:var(--ink);
+    text-shadow:0 1px 0 rgba(255,255,255,.7),0 2px 10px rgba(74,14,23,.12);
+  }
+  .btn{
+    position:relative;overflow:hidden;margin-top:clamp(18px,3vw,28px);cursor:pointer;
+    padding:15px clamp(20px,5vw,34px);border:0;border-radius:999px;
+    background:var(--wine);color:var(--cream);
+    font:700 clamp(1.05rem,3.8vw,1.3rem)/1.2 var(--serif);letter-spacing:.02em;
+    box-shadow:0 10px 22px -8px rgba(74,14,23,.6);
+    opacity:0;
+    transition:transform .3s ease,background .3s ease,box-shadow .3s ease;
+  }
+  #card.show .btn{animation:rise .9s 1s cubic-bezier(.2,.8,.2,1) both}
+  @keyframes rise{from{opacity:0;translate:0 22px}to{opacity:1;translate:0 0}}
+  .btn::after{ /* brillo que cruza al pasar el cursor */
+    content:"";position:absolute;inset:0;transform:translateX(-120%) skewX(-20deg);
+    background:linear-gradient(90deg,transparent,rgba(255,255,255,.28),transparent);transition:transform .7s ease;
+  }
+  .btn:hover,.btn:focus-visible{transform:translateY(-3px);background:var(--wine-hover);box-shadow:0 16px 28px -8px rgba(74,14,23,.65)}
+  .btn:hover::after,.btn:focus-visible::after{transform:translateX(120%) skewX(-20deg)}
+  .btn:active{transform:translateY(0)}
+  .btn:focus-visible{outline:3px solid var(--ink);outline-offset:3px}
+
+  /* ===== Fase 3: galería de polaroids ===== */
+  #gallery{
+    position:fixed;inset:0;z-index:5;overflow-y:auto;overflow-x:hidden;
+    padding:clamp(18px,4vh,48px) 4vw max(40px,env(safe-area-inset-bottom));display:flex;flex-direction:column;align-items:center;gap:clamp(34px,7vh,70px);
+    visibility:hidden;
+  }
+  .row{position:relative;width:min(940px,100%);display:flex;justify-content:center;gap:clamp(10px,3.2vw,40px);padding-top:6px}
+  .row::before{ /* el hilo */
+    content:"";position:absolute;left:0;right:0;top:0;height:2px;border-radius:2px;
+    background:rgba(74,14,23,.6);transform:scaleX(0);transform-origin:left;
+  }
+  .drop{position:relative;width:clamp(92px,26vw,205px)}
+  .hang{position:relative;transform-origin:50% 0;outline:none}
+  .hang:focus-visible{outline:3px solid var(--wine);outline-offset:5px;border-radius:4px}
+  .hang::before{ /* pinza de madera */
+    content:"";position:absolute;z-index:2;top:-9px;left:50%;translate:-50% 0;width:11px;height:26px;border-radius:3px;
+    background:linear-gradient(90deg,#D9B48A,#B88A5C);box-shadow:0 1px 3px rgba(45,11,18,.4);
+  }
+  .polaroid{
+    background:#fff;padding:7px 7px 0;border-radius:3px;rotate:var(--tilt);
+    transform-style:preserve-3d;
+    box-shadow:0 2px 3px rgba(45,11,18,.18),0 14px 26px -8px rgba(45,11,18,.4);
+    transition:transform .65s cubic-bezier(.2,.8,.2,1),rotate .45s cubic-bezier(.2,1.3,.4,1),scale .45s cubic-bezier(.2,1.3,.4,1),box-shadow .45s;
+  }
+  .drop.flipped .polaroid{transform:rotateY(180deg)}
+  .photo-face{backface-visibility:hidden;-webkit-backface-visibility:hidden}
+  .photo-front{position:relative}
+  .photo-back{
+    position:absolute;inset:0;transform:rotateY(180deg);display:flex;flex-direction:column;
+    align-items:center;justify-content:center;gap:10px;padding:14px;text-align:center;
+    background:linear-gradient(145deg,#FFF9F5,#FBE5EC);color:var(--wine);
+    border:7px solid #fff;font:italic 600 clamp(.9rem,3vw,1.18rem)/1.35 var(--serif);
+  }
+  .photo-back::before{content:"♡";font:1.5rem/1 var(--serif);color:#C56A80}
+  .ph{aspect-ratio:1;background:linear-gradient(135deg,#F8D7E0,#E3D0EE);overflow:hidden}
+  .ph img{width:100%;height:100%;object-fit:cover;display:block}
+  .photo-front figcaption{
+    padding:8px 0 10px;text-align:center;color:var(--ink);
+    font:italic 600 clamp(.82rem,2.7vw,1.1rem)/1.2 var(--serif);
+  }
+  #question{
+    width:min(720px,100%);display:grid;justify-items:center;gap:20px;text-align:center;
+    opacity:0;visibility:hidden;translate:0 18px;
+    transition:opacity .8s ease,translate .8s ease,visibility 0s .8s;
+  }
+  #question.show{opacity:1;visibility:visible;translate:0 0;transition:opacity .8s ease,translate .8s ease,visibility 0s}
+  #question h2{font:600 clamp(1.8rem,6vw,3rem)/1.1 var(--script);color:var(--wine)}
+  .question-actions{display:flex;justify-content:center;flex-wrap:wrap;gap:14px}
+  #question .btn{opacity:1;margin:0;min-width:112px}
+  #video-player{width:min(560px,100%);aspect-ratio:16/9;overflow:hidden;border-radius:10px;box-shadow:0 14px 30px -12px rgba(74,14,23,.5)}
+  #video-player[hidden]{display:none}
+  #youtube-player{width:100%;height:100%;border:0;display:block}
+  /* hover / toque / foco: se endereza, crece y pasa al frente */
+  .drop:hover,.drop:focus-within,.drop.active{z-index:20}
+  .drop:hover .hang,.drop:focus-within .hang,.drop.active .hang{animation-play-state:paused}
+  .drop:hover .polaroid,.drop:focus-within .polaroid,.drop.active .polaroid{
+    rotate:0deg;scale:1.16;box-shadow:0 4px 6px rgba(45,11,18,.2),0 26px 44px -10px rgba(45,11,18,.5);
+  }
+
+  /* Estado "galería" */
+  body.gallery #card{opacity:0;scale:.94;translate:-50% -60%;visibility:hidden;pointer-events:none;
+    transition:opacity .8s ease,scale .8s ease,translate .8s ease,visibility 0s .8s}
+  body.gallery #tulips{opacity:.25;transform:translateY(6vh)}
+  body.gallery #gallery{visibility:visible}
+  body.gallery .row::before{transform:scaleX(1);transition:transform 1s cubic-bezier(.2,.8,.2,1) calc(var(--ri)*.4s)}
+  body.gallery .drop{animation:drop 1.5s cubic-bezier(.2,.9,.3,1.15) var(--d) both}
+  body.gallery .hang{animation:swing var(--t) ease-in-out calc(var(--d) + 1.3s) infinite alternate}
+  @keyframes drop{from{translate:0 -120vh;opacity:0}15%{opacity:1}to{translate:0 0;opacity:1}}
+  @keyframes swing{from{rotate:calc(var(--a)*-1)}to{rotate:var(--a)}}
+
+  /* Accesibilidad: respetar movimiento reducido */
+  @media (prefers-reduced-motion:reduce){
+    body::before,.tulip svg,body.gallery .hang{animation:none}
+    .tulip,.pl,#card,.btn,.polaroid,#question{transition-duration:.01s!important;transition-delay:0s!important}
+    #card.show .btn,body.gallery .drop{animation-duration:.01s;animation-delay:0s}
+  }
+</style>
+</head>
+<body>
+  <canvas id="petals" aria-hidden="true"></canvas>
+  <div id="tulips" aria-hidden="true"></div>
+
+  <section id="card" aria-live="polite">
+    <h1>Hola Mayra, Te amo mucho 🥺</h1>
+    <button class="btn" id="go" type="button">Démonos la oportunidad de mejorar juntos</button>
+  </section>
+
+  <main id="gallery" aria-label="Galería de recuerdos"></main>
+
+<script>
+/* =====================================================================
+   CONFIGURACIÓN — cambia aquí las fotos y los textos
+   Reemplaza cada "src" por la URL (o ruta local) de tu foto real.
+   ===================================================================== */
+const PHOTOS = [
+  { src: './img/PrimeraVez.jpeg', cap: 'Nuestro primer recuerdo', note: 'Desde el primer día que te conocí, supe que serias la persona especial en mi vida.' },
+  { src: './img/Risas.jpeg', cap: 'Una risa juntos', note: 'Uno de los momentos favoritos, son en los que reímos juntos.' },
+  { src: './img/viaje juntos.jpg', cap: 'Ese viaje', note: 'A tu lado, cualquier lugar se convierte en un buen destino.' },
+  { src: './img/Abrazo2.jpeg', cap: 'Un día cualquiera', note: 'Mi paz siempre se encuentra en tus brazos.' },
+  { src: './img/BesoJuntos.jpeg', cap: 'Contigo, siempre', note: 'Si pudiera elegir otra vez, volvería a elegirte a ti una y otra vez.' },
+  { src: './img/PrimerDateCelebracion.jpeg', cap: 'Lo que viene', note: 'Quiero que sigamos construyendo recuerdos bonitos, juntos.' }
+];
+
+const $ = s => document.querySelector(s);
+const R = (a, b) => a + Math.random() * (b - a);
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const YES_YOUTUBE_URL = 'https://www.youtube.com/watch?v=XJWqHmY-g9U';
+const NO_YOUTUBE_URL = 'https://www.youtube.com/watch?v=WznOYgm8KqY';
+
+/* ===== Fase 1: lluvia de pétalos de lirio (canvas, 4 s + desvanecimiento) ===== */
+let petalsFrame = 0;
+let resizePetals;
+function rain() {
+  if (petalsFrame) cancelAnimationFrame(petalsFrame);
+  if (resizePetals) removeEventListener('resize', resizePetals);
+  const cv = $('#petals'), ctx = cv.getContext('2d');
+  const dpr = Math.min(devicePixelRatio || 1, 2);
+  let W, H;
+  resizePetals = () => { W = innerWidth; H = innerHeight; cv.width = W * dpr; cv.height = H * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0); };
+  resizePetals(); addEventListener('resize', resizePetals);
+
+  const COLORS = [['#FFFFFF', '#F9D5E0'], ['#FFF8FA', '#F4A9C2'], ['#FFFFFF', '#FCE4EC']];
+  const petals = []; let acc = 0, t0 = 0, last = 0;
+
+  const spawn = () => petals.push({
+    x0: R(0, W), y: R(-60, -20), s: R(11, 22) * (W < 600 ? .8 : 1),
+    vy: R(45, 95), amp: R(18, 46), f: R(.7, 1.5), ph: R(0, 6.28),
+    r: R(0, 6.28), vr: R(-1, 1), fl: R(0, 6.28), vf: R(1.2, 3), age: 0,
+    c: COLORS[Math.floor(R(0, 3))]
+  });
+
+  function frame(now) {
+    if (!t0) { t0 = last = now; }
+    const t = (now - t0) / 1000, dt = Math.min((now - last) / 1000, .05); last = now;
+    ctx.clearRect(0, 0, W, H);
+
+    if (t < 4) { acc += dt * 18; while (acc >= 1) { spawn(); acc--; } }   // lluvia: 0–4 s
+    const fade = Math.max(0, 1 - Math.max(0, t - 4) / 2.2);               // fade-out tras 4 s
+
+    for (const p of petals) {
+      p.age += dt; p.y += p.vy * dt; p.r += p.vr * dt; p.fl += p.vf * dt;
+      const x = p.x0 + Math.sin(p.ph + p.age * p.f) * p.amp;              // balanceo
+      const k = Math.abs(Math.cos(p.fl));                                  // giro 3D simulado
+      ctx.save();
+      ctx.translate(x, p.y);
+      ctx.rotate(p.r + Math.sin(p.age * p.f) * .5);
+      ctx.scale(Math.max(.15, k), 1);
+      ctx.globalAlpha = fade * (.65 + .35 * k);
+      const g = ctx.createLinearGradient(0, -p.s, 0, p.s);
+      g.addColorStop(0, p.c[0]); g.addColorStop(1, p.c[1]);
+      ctx.beginPath();
+      ctx.moveTo(0, -p.s);
+      ctx.bezierCurveTo(p.s * .9, -p.s * .5, p.s * .55, p.s * .55, 0, p.s * .9);
+      ctx.bezierCurveTo(-p.s * .55, p.s * .55, -p.s * .9, -p.s * .5, 0, -p.s);
+      ctx.fillStyle = g; ctx.fill();
+      ctx.strokeStyle = 'rgba(160,60,90,.28)'; ctx.lineWidth = .8; ctx.stroke();
+      ctx.restore();
+    }
+    if (t < 6.3) petalsFrame = requestAnimationFrame(frame);
+    else { ctx.clearRect(0, 0, W, H); petalsFrame = 0; }
+  }
+  petalsFrame = requestAnimationFrame(frame);
+}
+
+/* ===== Fase 2: tulipanes en SVG ===== */
+const PETAL = 'M0 0C-20-6-26-44 0-70 26-44 20-6 0 0Z';
+const tulipSVG = ([c1, c2, c3]) => `
+<svg viewBox="0 0 100 260" preserveAspectRatio="xMidYMax meet">
+  <path d="M50 260C47 210 54 170 50 130" fill="none" stroke="#5B7B49" stroke-width="5" stroke-linecap="round"/>
+  <path d="M50 252C18 232 12 192 20 160 40 182 49 216 50 252Z" fill="#6E9157"/>
+  <path d="M50 238C84 220 90 184 82 156 62 178 52 206 50 238Z" fill="#5B7B49"/>
+  <g transform="translate(50 134)">
+    <path class="pl B" d="${PETAL}" fill="${c3}"/>
+    <path class="pl L" d="${PETAL}" fill="${c2}"/>
+    <path class="pl R" d="${PETAL}" fill="${c2}"/>
+    <path class="pl F" d="${PETAL}" fill="${c1}"/>
+  </g>
+</svg>`;
+
+// x: posición horizontal (%), h: altura (vh), d: orden de aparición, a: colores [frente, laterales, fondo]
+const TULIPS = [
+  { x: 14, h: 24, d: 2, a: ['#F8A5C2', '#EE7AA3', '#C2406F'] },
+  { x: 31, h: 31, d: 1, a: ['#F26D85', '#E0476A', '#B3234A'] },
+  { x: 50, h: 37, d: 0, a: ['#F48FB1', '#E8648F', '#B3234A'] },
+  { x: 69, h: 29, d: 1, a: ['#FF9B85', '#F2765F', '#C0453A'] },
+  { x: 86, h: 22, d: 2, a: ['#F8A5C2', '#EE7AA3', '#C2406F'] },
+];
+const tulips = $('#tulips');
+tulips.innerHTML = TULIPS.map((t, i) =>
+  `<div class="tulip" style="--x:${t.x}%;--h:${t.h};--d:${t.d};--sd:${-i * 1.3}s">${tulipSVG(t.a)}</div>`).join('');
+
+/* ===== Fase 3: galería de polaroids ===== */
+const gallery = $('#gallery');
+gallery.innerHTML = [PHOTOS.slice(0, 3), PHOTOS.slice(3, 6)].map((row, ri) =>
+  `<div class="row" style="--ri:${ri}">` + row.map((p, i) => {
+    const n = ri * 3 + i, d = (.6 + n * .18).toFixed(2);
+    return `<figure class="drop" style="--d:${d}s">
+      <div class="hang" tabindex="0" role="button" aria-pressed="false" aria-label="Voltear foto: ${p.cap}" style="--a:${R(2, 4.5).toFixed(1)}deg;--t:${R(3.2, 5).toFixed(1)}s">
+        <div class="polaroid" style="--tilt:${R(-8, 8).toFixed(1)}deg">
+          <div class="photo-face photo-front">
+            <div class="ph"><img src="${p.src}" alt="${p.cap}" onerror="this.remove()"></div>
+            <figcaption>${p.cap}</figcaption>
+          </div>
+          <div class="photo-face photo-back">${p.note}</div>
+        </div>
+      </div></figure>`;
+  }).join('') + `</div>`).join('') + `
+  <section id="question" aria-labelledby="question-title">
+    <h2 id="question-title">¿Quieres seguir siendo mi compañera de vida?</h2>
+    <div class="question-actions">
+      <button class="btn" id="answer-yes" type="button">Sí</button>
+      <button class="btn" id="answer-no" type="button">No</button>
+    </div>
+    <div id="video-player" hidden>
+      <iframe id="youtube-player" title="Video de YouTube" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+    </div>
+  </section>`;
+
+// Clic, toque o teclado: voltea la foto y muestra su mensaje personalizado
+gallery.addEventListener('click', e => {
+  const hang = e.target.closest('.hang'); if (!hang) return;
+  const f = hang.closest('.drop');
+  const on = f.classList.contains('flipped');
+  gallery.querySelectorAll('.active').forEach(x => x.classList.remove('active'));
+  f.classList.toggle('flipped', !on);
+  f.classList.toggle('active', !on);
+  hang.setAttribute('aria-pressed', String(!on));
+});
+gallery.addEventListener('keydown', e => {
+  if (e.target.matches('.hang') && (e.key === 'Enter' || e.key === ' ')) {
+    e.preventDefault();
+    e.target.closest('.drop').querySelector('.hang').click();
+  }
+});
+
+/* ===== Secuencia temporal ===== */
+addEventListener('load', () => {
+  const T = reduce ? 0 : 4000;                       // tulipanes empiezan a los 4 s
+  if (!reduce) rain();
+  setTimeout(() => tulips.classList.add('grow'), T);
+  setTimeout(() => tulips.classList.add('open'), T + 3000);          // se abren los pétalos
+  setTimeout(() => $('#card').classList.add('show'), T + 3900);      // aparece el mensaje + botón
+});
+$('#go').addEventListener('click', () => {
+  document.body.classList.add('gallery');
+  setTimeout(() => $('#question').classList.add('show'), 5000);
+});
+function playYoutubeVideo(videoId) {
+  const player = $('#video-player');
+  $('#youtube-player').src = `https://www.youtube.com/embed/${videoId}?autoplay=1&playsinline=1`;
+  player.hidden = false;
+  player.scrollIntoView({ behavior: reduce ? 'instant' : 'smooth', block: 'nearest' });
+}
+$('#answer-yes').addEventListener('click', () => {
+  if (!reduce) rain();
+  playYoutubeVideo('JiR87Tpvy94');
+});
+$('#answer-no').addEventListener('click', () => {
+  playYoutubeVideo('WznOYgm8KqY');
+});
+</script>
+</body>
+</html>
